@@ -1,10 +1,11 @@
 import { CustomToast } from "@/components/Toast";
-import { AsyncStorageKeys } from "@/constants";
+import { AsyncStorageKeys, SERVER_URL, URLS } from "@/constants";
+import { getAxiosInstance } from "@/utils/API";
 import { printLogs } from "@/utils/logs";
 import { setToken, setUserDetails } from "@/utils/store";
 import { QueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ export default function LoginForm() {
     const [password, setPassword] = useState("");
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const router = useRouter();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -24,10 +26,9 @@ export default function LoginForm() {
         try {
             setIsLoading(true);
             const requestBody = { email, password };
-            const response = await axios.post(
-                "https://api.pssemrevents.com/api/v1/auth/organizer/login",
-                requestBody
-            );
+
+            const axiosInstance = await getAxiosInstance(false);
+            const response = await axiosInstance.post(URLS.LOGIN, requestBody);
 
             if (response?.data?.success === true && response?.data) {
                 const data = response.data.data;
@@ -38,12 +39,17 @@ export default function LoginForm() {
                     CustomToast.success("Logged in!");
                     router.replace("/(tabs)/(scanner)/scan");
                 } else {
-                    CustomToast.error("Login failed, try again!");
+                    CustomToast.error("Login failed!");
                 }
             }
         } catch (error) {
-            CustomToast.error("Login failed, try again!");
-            printLogs("Login error:", error);
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 401) {
+                    CustomToast.error("Invalid credentials!");
+                    return;
+                }
+            }
+            CustomToast.error("Login failed, try again later!");
         } finally {
             setIsLoading(false);
         }

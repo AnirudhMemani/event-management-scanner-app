@@ -1,8 +1,7 @@
-import AlertDialog from "@/components/AlertDialog";
 import { CustomToast } from "@/components/Toast";
 import { AsyncStorageKeys } from "@/constants";
 import { printLogs } from "@/utils/logs";
-import { removeToken } from "@/utils/store";
+import { getToken, removeToken } from "@/utils/store";
 import axios from "axios";
 import { CameraView } from "expo-camera";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -15,22 +14,23 @@ import {
     StyleSheet,
 } from "react-native";
 import { Overlay } from "./Overlay";
+import { clearStorageAndLogout } from "@/utils/API";
 
 export default function Home() {
     const [isCameraActive, setIsCameraActive] = useState(true);
     const qrLock = useRef(false);
     const appState = useRef(AppState.currentState);
-
-    const local = useLocalSearchParams();
     const router = useRouter();
-
-    console.log(local.id);
-
-    const token = local?.id;
 
     const validateQrCode = async (data: any) => {
         try {
             printLogs(data);
+            const token = await getToken(AsyncStorageKeys.token);
+            if (!token) {
+                clearStorageAndLogout(router);
+                return;
+            }
+            printLogs(token);
             const response = await axios.get(data, {
                 headers: { Authorization: "Bearer " + token },
             });
@@ -41,13 +41,12 @@ export default function Home() {
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 403) {
-                    CustomToast.error("Unathorized login");
-                    await removeToken(AsyncStorageKeys.token);
-                    router.replace("/(auth)/sign-in");
+                    printLogs("Error response", error.response.data);
+                    clearStorageAndLogout(router);
                     return;
                 }
             }
-            CustomToast.error("Failed with an error");
+            CustomToast.error("Failed to scan QR Code. Try again!");
             //@ts-ignore
             printLogs("meals request error", error?.response?.data);
             //@ts-ignore

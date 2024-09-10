@@ -1,11 +1,14 @@
-export const SERVER_URL: string =
-    process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:3000";
+export const SERVER_URL = "https://api.pssemrevents.com";
+
+// https://51da-106-51-116-120.ngrok-free.app
+
+// https://api.pssemrevents.com
 
 const version: string = "/api/v1";
 
 export const URLS = {
     AUTH: version + "/auth",
-    USERS: version + "/users",
+    LOGIN: version + "/auth/organizer/login",
     ATHLETE: version + "/athlete",
     COACH: version + "/coach",
     MANAGER: version + "/manager",
