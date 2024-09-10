@@ -2,13 +2,13 @@ import { globalColors } from "@/constants/Colors";
 import React, { FC, ReactElement, useEffect, useRef, useState } from "react";
 import {
     FlatList,
+    Image,
     ListRenderItem,
     Modal,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
-    Image,
 } from "react-native";
 
 export interface ITruckProps {
@@ -21,14 +21,15 @@ export interface IProps {
     label: string;
     data: Array<ITruckProps>;
     onSelect: (item: ITruckProps) => void;
+    selected: ITruckProps | undefined;
 }
 
-const Dropdown: FC<IProps> = ({ label, data, onSelect }) => {
+const Dropdown: FC<IProps> = ({ label, data, onSelect, selected }) => {
     const chevron_down = require("../../assets/icons/chevron-down.png");
     const chevron_up = require("../../assets/icons/chevron-up.png");
     const DropdownButton = useRef<TouchableOpacity>(null);
     const [visible, setVisible] = useState(false);
-    const [selected, setSelected] = useState<any>(undefined);
+    // const [selected, setSelected] = useState<any>(undefined);
     const [dropdownTop, setDropdownTop] = useState(0);
     const [chevronToggle, setChevronToggle] = useState(chevron_down);
 
@@ -57,7 +58,7 @@ const Dropdown: FC<IProps> = ({ label, data, onSelect }) => {
     };
 
     const onItemPress = (item: ITruckProps): void => {
-        setSelected(item);
+        // setSelected(item);
         onSelect(item);
         setVisible(false);
     };
@@ -66,7 +67,7 @@ const Dropdown: FC<IProps> = ({ label, data, onSelect }) => {
         <TouchableOpacity
             style={[
                 styles.item,
-                selected?.name === item.label ? styles.selectedItem : null,
+                selected?.value === item.value ? styles.selectedItem : null,
             ]}
             onPress={() => onItemPress(item)}
         >
@@ -123,7 +124,9 @@ const Dropdown: FC<IProps> = ({ label, data, onSelect }) => {
                         : { color: globalColors.PLACEHOLDER },
                 ]}
             >
-                {selected?.label || label}
+                {selected?.chestNumber && selected?.label
+                    ? selected.label + " - " + selected.chestNumber
+                    : selected?.label || label}
             </Text>
             <Image
                 style={styles.icon}

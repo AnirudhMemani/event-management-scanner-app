@@ -16,6 +16,8 @@ export const URLS = {
     GROUPS: version + "/event/group-events",
     CULTURAL: version + "/event/cultural-events",
     SCHOOL: version + "/school",
+    CLAIM_MEAL: version + "/meal/verify-meal",
+    GET_MEAL_DETAILS: version + "/meal/get-meal-details",
 };
 
 export const AsyncStorageKeys = {

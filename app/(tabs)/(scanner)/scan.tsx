@@ -1,3 +1,4 @@
+import { CustomToast } from "@/components/Toast";
 import { AsyncStorageKeys } from "@/constants";
 import { getToken, removeToken } from "@/utils/store";
 import { useCameraPermissions } from "expo-camera";
@@ -23,9 +24,9 @@ export default function Home() {
 
     const validateCameraPermissionStatus = async () => {
         if (!permission?.granted && !permission?.canAskAgain) {
-            Toast.show(
+            CustomToast.info(
                 "You will have to manually grant camera access from app's permission settings",
-                { duration: Toast.durations.LONG }
+                1000 * 10
             );
         } else {
             await requestPermission();

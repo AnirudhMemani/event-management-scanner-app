@@ -1,8 +1,10 @@
 import Dropdown, { ITruckProps } from "@/components/Dropdown";
 import Loader from "@/components/Loader";
+import { CustomToast } from "@/components/Toast";
 import { URLS } from "@/constants";
 import { clearStorageAndLogout, getAxiosInstance } from "@/utils/API";
 import { printLogs } from "@/utils/logs";
+import axios from "axios";
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -36,6 +38,14 @@ export default function Page() {
 
     const router = useRouter();
 
+    const getRequestBody = (id: string) => {
+        return selectedEntityType?.value === "athlete"
+            ? { registrationId: id }
+            : selectedEntityType?.value === "manager"
+            ? { managerId: id }
+            : { coachId: id };
+    };
+
     const getAllSchools = async () => {
         try {
             setIsLoading(true);
@@ -45,7 +55,6 @@ export default function Page() {
                 return;
             }
             const response = await axiosInstance.get(URLS.SCHOOL);
-            printLogs("Response data for schools", response.data);
             if (response.data.success === true) {
                 const data = response.data.data as any[];
                 setSchoolDetails(
@@ -76,7 +85,6 @@ export default function Page() {
             const response = await axiosInstance.get(
                 `/api/v1/${selectedEntityType?.value}/school/${id}`
             );
-            printLogs("Response data for athletes", response.data);
             if (response.data.success === true) {
                 const data = response.data.data as any[];
                 setEntityDetails(
@@ -108,15 +116,10 @@ export default function Page() {
             }
             printLogs("selected entity value", selectedEntity?.value);
             printLogs("selectedEntityType value", selectedEntityType?.value);
-            const requestBody =
-                selectedEntityType?.value === "athlete"
-                    ? { registrationId: selectedEntity?.value }
-                    : selectedEntityType?.value === "manager"
-                    ? { managerId: selectedEntity?.value }
-                    : { coachId: selectedEntity?.value };
+            const requestBody = getRequestBody(id);
             printLogs("requestBody", requestBody);
             const response = await axiosInstance.post(
-                "/api/v1/meal/get-meal-details",
+                URLS.GET_MEAL_DETAILS,
                 requestBody
             );
             printLogs("Response data for remaining meals", response.data.data);
@@ -140,7 +143,46 @@ export default function Page() {
         }
     };
 
+    const availMeal = async () => {
+        try {
+            const axiosInstance = await getAxiosInstance(true);
+            if (!axiosInstance) {
+                await clearStorageAndLogout(router);
+                return;
+            }
+            const query =
+                selectedEntityType?.value === "athlete"
+                    ? "registrationId=" + selectedEntity?.value
+                    : selectedEntityType?.value === "manager"
+                    ? "managerId=" + selectedEntity?.value
+                    : "coachId=" + selectedEntity?.value;
+            const response = await axiosInstance.get(
+                `${URLS.CLAIM_MEAL}?${query}`
+            );
+            if (response.data.success === true) {
+                console.log("verify meal response", response.data.data);
+                CustomToast.success("Meal availed successfully!");
+                router.replace("/(scanner)/scan");
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 403) {
+                    printLogs("Error response", error.response.data);
+                    clearStorageAndLogout(router);
+                    return;
+                }
+            }
+            CustomToast.error("Failed to scan QR Code. Try again!");
+            //@ts-ignore
+            printLogs("meals request error", error?.response?.data);
+            //@ts-ignore
+            printLogs("meals request error status", error?.response?.status);
+            router.replace("/(tabs)/(scanner)/scan");
+        }
+    };
+
     useEffect(() => {
+        setSelectedSchool(undefined);
         getAllSchools();
     }, []);
 
@@ -151,8 +193,8 @@ export default function Page() {
     }, [selectedSchool]);
 
     useEffect(() => {
-        printLogs("selectedSchool", selectedSchool);
         if (selectedEntityType?.value && selectedSchool?.value) {
+            setSelectedEntity(undefined);
             getAthletes(selectedSchool?.value);
         }
     }, [selectedEntityType]);
@@ -176,6 +218,7 @@ export default function Page() {
                             data={schoolDetails}
                             label="Select a school..."
                             onSelect={setSelectedSchool}
+                            selected={selectedSchool}
                         />
                     )}
                     {selectedSchool && (
@@ -187,6 +230,7 @@ export default function Page() {
                                     item: ITruckProps
                                 ) => void
                             }
+                            selected={selectedEntityType}
                         />
                     )}
                     {entityDetails && (
@@ -194,10 +238,10 @@ export default function Page() {
                             data={entityDetails}
                             label="Select an entity..."
                             onSelect={setSelectedEntity}
+                            selected={selectedEntity}
                         />
                     )}
                     {selectedEntity && (
-                        // get meals from API and deduct meal if availed
                         <View className="gap-3 mt-6">
                             <Text className="text-white text-center text-lg">
                                 This person has{" "}
@@ -207,7 +251,10 @@ export default function Page() {
                                 meals remaining
                             </Text>
                             {remainingMeals && remainingMeals > 0 && (
-                                <TouchableOpacity className="bg-[#0E7AFE] p-3 rounded-lg">
+                                <TouchableOpacity
+                                    className="bg-[#0E7AFE] p-3 rounded-lg"
+                                    onPress={availMeal}
+                                >
                                     <Text className="text-white font-bold text-lg text-center">
                                         Avail meal
                                     </Text>
