@@ -7,6 +7,7 @@ import {
     Modal,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -32,6 +33,7 @@ const Dropdown: FC<IProps> = ({ label, data, onSelect, selected }) => {
     // const [selected, setSelected] = useState<any>(undefined);
     const [dropdownTop, setDropdownTop] = useState(0);
     const [chevronToggle, setChevronToggle] = useState(chevron_down);
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
         if (visible) {
@@ -79,6 +81,21 @@ const Dropdown: FC<IProps> = ({ label, data, onSelect, selected }) => {
         </TouchableOpacity>
     );
 
+    const getItemData = (data: ITruckProps[]) => {
+        if (searchQuery) {
+            const filteredData = data.filter((value) =>
+                value.label
+                    .toLowerCase()
+                    .trim()
+                    .includes(searchQuery.toLowerCase().trim())
+            );
+
+            return filteredData;
+        } else {
+            return data;
+        }
+    };
+
     const renderDropdown = (): ReactElement<any, any> => {
         return (
             <Modal
@@ -94,13 +111,21 @@ const Dropdown: FC<IProps> = ({ label, data, onSelect, selected }) => {
                         <View
                             style={[
                                 styles.dropDownItemsContainer,
-                                { top: dropdownTop },
+                                { top: dropdownTop - 30 },
                             ]}
                         >
+                            <TextInput
+                                onChangeText={(value) => setSearchQuery(value)}
+                                value={searchQuery}
+                                className="bg-white p-3 text-md text-gray-500 border-b"
+                                placeholder={`Search for a ${label
+                                    .split(" ")
+                                    .pop()}`}
+                            />
                             <FlatList
-                                data={data}
+                                data={getItemData(data)}
                                 renderItem={renderItem}
-                                keyExtractor={(item, index) => index.toString()}
+                                keyExtractor={(_, index) => index.toString()}
                             />
                         </View>
                     </TouchableOpacity>

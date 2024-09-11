@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from "axios";
 import { getToken, removeToken } from "./store";
 import { Router } from "expo-router";
 import { CustomToast } from "@/components/Toast";
+import { printLogs } from "./logs";
 
 const API_TIMEOUT = 30 * 1000;
 
@@ -15,6 +16,7 @@ export function getAxiosInstance(
 
 export async function getAxiosInstance(isTokenRequired: boolean) {
     const token = await getToken(AsyncStorageKeys.token);
+    printLogs(token);
     if (isTokenRequired && !token) {
         return null;
     } else if (isTokenRequired && token) {
@@ -23,13 +25,13 @@ export async function getAxiosInstance(isTokenRequired: boolean) {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            withCredentials: true,
+            withCredentials: false,
             timeout: API_TIMEOUT,
         });
     } else {
         return axios.create({
             baseURL: SERVER_URL,
-            withCredentials: true,
+            withCredentials: false,
             timeout: API_TIMEOUT,
         });
     }

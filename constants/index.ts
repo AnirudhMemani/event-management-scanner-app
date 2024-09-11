@@ -18,6 +18,7 @@ export const URLS = {
     SCHOOL: version + "/school",
     CLAIM_MEAL: version + "/meal/verify-meal",
     GET_MEAL_DETAILS: version + "/meal/get-meal-details",
+    GET_ALL_MEALS: version + "/meal/get-total-meal-summary",
 };
 
 export const AsyncStorageKeys = {

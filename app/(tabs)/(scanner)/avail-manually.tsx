@@ -160,8 +160,11 @@ export default function Page() {
                 `${URLS.CLAIM_MEAL}?${query}`
             );
             if (response.data.success === true) {
-                console.log("verify meal response", response.data.data);
-                CustomToast.success("Meal availed successfully!");
+                const data = response.data.data;
+                console.log("verify meal response", data);
+                CustomToast.success(
+                    `${data.name}'s meal availed successfully. ${data.name} has ${data.mealsRemaining} remaining`
+                );
                 router.replace("/(scanner)/scan");
             }
         } catch (error) {
@@ -169,14 +172,23 @@ export default function Page() {
                 if (error.response?.status === 403) {
                     printLogs("Error response", error.response.data);
                     clearStorageAndLogout(router);
-                    return;
+                } else if (error.response?.status === 404) {
+                    CustomToast.error("Not eligible to avail meal");
+                } else if (error.response?.status === 400) {
+                    CustomToast.error(
+                        "This person has exhauted their meals for the today"
+                    );
+                } else if (error.response?.status === 402) {
+                    CustomToast.error("This person has been applied for meals");
+                } else {
+                    CustomToast.error(
+                        "Internal server error. Try again later!"
+                    );
                 }
+                router.replace("/(tabs)/(scanner)/scan");
+                return;
             }
             CustomToast.error("Failed to scan QR Code. Try again!");
-            //@ts-ignore
-            printLogs("meals request error", error?.response?.data);
-            //@ts-ignore
-            printLogs("meals request error status", error?.response?.status);
             router.replace("/(tabs)/(scanner)/scan");
         }
     };

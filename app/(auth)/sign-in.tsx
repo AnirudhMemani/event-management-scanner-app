@@ -1,11 +1,10 @@
 import { CustomToast } from "@/components/Toast";
-import { AsyncStorageKeys, SERVER_URL, URLS } from "@/constants";
+import { AsyncStorageKeys, URLS } from "@/constants";
 import { getAxiosInstance } from "@/utils/API";
-import { printLogs } from "@/utils/logs";
 import { setToken, setUserDetails } from "@/utils/store";
 import { QueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

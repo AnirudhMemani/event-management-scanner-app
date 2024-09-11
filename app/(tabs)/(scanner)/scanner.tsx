@@ -1,8 +1,7 @@
+import Loader from "@/components/Loader";
 import { CustomToast } from "@/components/Toast";
-import { AsyncStorageKeys } from "@/constants";
-import { clearStorageAndLogout } from "@/utils/API";
+import { clearStorageAndLogout, getAxiosInstance } from "@/utils/API";
 import { printLogs } from "@/utils/logs";
-import { getToken } from "@/utils/store";
 import axios from "axios";
 import { CameraView } from "expo-camera";
 import { Stack, useRouter } from "expo-router";
@@ -15,7 +14,6 @@ import {
     StyleSheet,
 } from "react-native";
 import { Overlay } from "./Overlay";
-import Loader from "@/components/Loader";
 
 export default function Home() {
     const [isCameraActive, setIsCameraActive] = useState(true);
@@ -24,46 +22,58 @@ export default function Home() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
-    const validateQrCode = async (data: any) => {
+    const validateQrCode = async (data: string) => {
         try {
             printLogs(data);
 
-            const token = await getToken(AsyncStorageKeys.token);
-            if (!token) {
+            const parts = data.split("/");
+
+            const url = parts.slice(3).join("/");
+
+            printLogs("url", url);
+
+            const axiosInstance = await getAxiosInstance(true);
+
+            if (!axiosInstance) {
                 clearStorageAndLogout(router);
                 return;
             }
 
-            printLogs("token before hitting the API:", token);
-
             setIsLoading(true);
-            const response = await axios.get(data, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
 
-            console.log("response data", response.data);
+            const response = await axiosInstance.get(`/${url}`);
 
             if (response.data.success === true) {
-                CustomToast.success("Meal availed successfully!");
-                router.replace("/(tabs)/(scanner)/scan");
-                setIsCameraActive(false);
+                const data = response.data.data;
+                console.log("verify meal response", data);
+                CustomToast.success(
+                    `${data.name}'s meal availed successfully. ${data.name} has ${data.mealsRemaining} remaining`
+                );
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 403) {
                     printLogs("Error response", error.response.data);
                     clearStorageAndLogout(router);
-                    return;
+                } else if (error.response?.status === 404) {
+                    CustomToast.error("Not eligible to avail meal");
+                } else if (error.response?.status === 400) {
+                    CustomToast.error(
+                        "This person has exhauted their meals for the today"
+                    );
+                } else if (error.response?.status === 402) {
+                    CustomToast.error("This person has been applied for meals");
+                } else {
+                    CustomToast.error(
+                        "Internal server error. Try again later!"
+                    );
                 }
+                return;
             }
             CustomToast.error("Failed to scan QR Code. Try again!");
-            //@ts-ignore
-            printLogs("meals request error", error?.response?.data);
-            //@ts-ignore
-            printLogs("meals request error status", error?.response?.status);
+        } finally {
             setIsCameraActive(false);
             router.replace("/(tabs)/(scanner)/scan");
-        } finally {
             setIsLoading(false);
         }
     };
