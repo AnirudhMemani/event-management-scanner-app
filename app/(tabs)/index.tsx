@@ -51,6 +51,12 @@ export default function Dashboard() {
                     mealsConsumed: data[date].mealsConsumed,
                 }));
 
+                // Sort the mealsArray by date
+                mealsArray.sort(
+                    (a, b) =>
+                        new Date(a.date).getTime() - new Date(b.date).getTime()
+                );
+
                 setAllMealCount(mealsArray);
 
                 const initialCollapsedState = mealsArray.reduce((acc, meal) => {
@@ -68,7 +74,7 @@ export default function Dashboard() {
                 }
             }
             CustomToast.error(
-                "Clouldn't fetch the data. An unknown error occurred"
+                "Couldn't fetch the data. An unknown error occurred"
             );
             printLogs(
                 "Error getting total meals summary",

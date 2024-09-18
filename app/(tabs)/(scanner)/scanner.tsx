@@ -22,6 +22,8 @@ export default function Home() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
+    const TOAST_DURATION = 10 * 1000;
+
     const validateQrCode = async (data: string) => {
         try {
             printLogs(data);
@@ -47,7 +49,8 @@ export default function Home() {
                 const data = response.data.data;
                 console.log("verify meal response", data);
                 CustomToast.success(
-                    `${data.name}'s meal availed successfully. ${data.name} has ${data.mealsRemaining} remaining`
+                    `${data.name}'s meal availed successfully. ${data.name} has ${data.mealsRemaining} remaining`,
+                    TOAST_DURATION
                 );
             }
         } catch (error) {
