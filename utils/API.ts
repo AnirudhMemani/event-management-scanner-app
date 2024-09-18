@@ -16,7 +16,6 @@ export function getAxiosInstance(
 
 export async function getAxiosInstance(isTokenRequired: boolean) {
     const token = await getToken(AsyncStorageKeys.token);
-    printLogs(token);
     if (isTokenRequired && !token) {
         return null;
     } else if (isTokenRequired && token) {

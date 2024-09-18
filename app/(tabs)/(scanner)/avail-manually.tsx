@@ -89,7 +89,12 @@ export default function Page() {
                 const data = response.data.data as any[];
                 setEntityDetails(
                     data.map((entity) => ({
-                        value: entity.registrationId,
+                        value:
+                            selectedEntityType?.value === "athlete"
+                                ? entity.registrationId
+                                : selectedEntityType?.value === "manager"
+                                ? entity.managerId
+                                : entity.coachId,
                         label: entity.name,
                         chestNumber: entity.chestNumber,
                     }))
